@@ -1,0 +1,161 @@
+#!/usr/local/bin/ruby -ws
+
+$TESTING = false unless defined? $TESTING
+require 'pp'
+require 'tempfile'
+
+def usage(exit_code = 0)
+  cmd = File.basename($0)
+  puts "#{cmd} [options] files|libs"
+  puts "  options:"
+  puts "    -h show help"
+  puts "    -f fast mode - graph a snippet of code from standard input"
+  puts "    -a color ABC nodes"
+  puts "    -s graph basic structure only"
+  exit exit_code
+end
+
+usage if defined? $h
+
+
+#begin
+#  require 'rubygems'
+#  require_gem 'ParseTree'
+#rescue LoadError
+  require 'parse_tree'
+#end
+
+require 'sexp_processor'
+
+def discover_new_classes_from
+  old_classes = []
+  ObjectSpace.each_object(Module) do |klass|
+    old_classes << klass
+  end
+
+  yield
+
+  new_classes = []
+  ObjectSpace.each_object(Module) do |klass|
+    new_classes << klass
+  end
+
+  new_classes - old_classes
+end
+
+$f = false unless defined? $f
+
+new_classes = discover_new_classes_from do
+  ARGV.unshift "-" if ARGV.empty?
+  ARGV.each do |name|
+    if name == "-" then
+      code = $stdin.read
+      code = "class Example; def example; #{code}; end; end" if $f
+      eval code unless code.nil?
+    else
+      require name
+    end
+  end
+end unless $TESTING
+
+require 'graph'
+
+class SexpGrapher < SexpProcessor
+
+  attr_reader :graph
+  def initialize
+    super
+    self.default_method = :grapher
+    self.warn_on_default = false
+    @stack = []
+    @graph = Graph.new
+    @graph.prefix << "   node [ shape = box, style = filled ];"
+    @abc = defined? $a
+    @n = 1
+  end
+
+  ##
+  # Create a DOT graph of the parse tree
+  #
+  # For example:
+  #
+  #   [:call, [:lit, 1], :+, [:array, [:lit, 1]]]
+  #
+  # at start of exp, push :call onto stack
+  # process :call
+  # recurse into :lit
+  # at start of exp, push :lit onto stack
+  # process :lit
+  # process 1
+  # 
+
+  def convert_node(n)
+    node = "n%04d" % @n
+    @n += 1
+    @graph.attribs[node]<<"label = \"#{n.inspect.gsub('"', '\\"')}\""
+    node
+  end
+
+  def color_node(node_type, current)
+    color = case node_type
+            when :attrasgn, :attrset, :dasgn_curr, :iasgn, :lasgn, :masgn then
+              "lightblue"
+            when :and, :case, :else, :if, :iter, :or, :rescue, :until, :when, :while then
+              "palegreen"
+            when :call, :fcall, :super, :vcall, :yield then
+              "goldenrod"
+            else
+              nil
+            end
+    @graph.attribs[current] << "color = #{color.inspect}" unless color.nil?
+  end
+
+  def grapher(exp)
+    current = nil
+    previous = @stack.last
+
+    unless Array === exp.first then
+      node_type = exp.shift
+      current = convert_node(node_type)
+      color_node(node_type, current) if @abc
+      @graph[previous] << current unless previous.nil?
+      @stack.push current
+    end
+
+    previous = current
+
+    until exp.empty? do
+      current = exp.shift
+      if Array === current then
+        process(current)
+        previous = @stack.last
+      else
+        node_type = current
+        current = convert_node(current)
+        @graph[previous] << current unless previous.nil?
+        previous = current
+      end
+    end
+    @stack.pop
+    s() # junk return
+  end
+
+  def graphstr
+    @graph.to_s
+  end
+end
+
+if __FILE__ == $0 then
+  result = ParseTree.new.parse_tree(*new_classes)
+  if $f then
+    result = result[0][3][2][1] # extracts just the body of the example method
+    result.shift
+    result.shift
+  end
+
+  result = Sexp.from_array(result)
+  grapher = SexpGrapher.new
+  result = result.structure if defined? $s
+  grapher.process(result)
+  puts grapher.graphstr
+end

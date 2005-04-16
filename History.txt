@@ -1,0 +1,4 @@
+*** 1.0.0. / 2005-04-15
+ 
++ 1 major enhancement
+ 	+ Birthday!
