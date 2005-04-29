@@ -7,9 +7,11 @@ module Inline
   class Ruby < Inline::C
     def optimize(meth)
       src = RubyToC.translate(@mod, meth)
-      STDERR.puts
-      STDERR.puts src
-      STDERR.puts
+      if $DEBUG then
+        STDERR.puts
+        STDERR.puts src
+        STDERR.puts
+      end
       @mod.class_eval "alias :#{meth}_slow :#{meth}"
       @mod.class_eval "remove_method :#{meth}"
       c src
@@ -31,8 +33,10 @@ class ZenOptimizer
 
   def self.stop_optimizing
     self.instance.remove_event_hook
-    STDERR.puts @@skip.inspect
-    STDERR.puts @@data.sort_by{|x,y| y}.inspect
+    if $DEBUG then
+      STDERR.puts @@skip.inspect
+      STDERR.puts @@data.sort_by{|x,y| y}.reverse[0..4].inspect
+    end
   end
 
   def self.optimize(signature)

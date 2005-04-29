@@ -19,9 +19,9 @@ class TestOrderedHash < Test::Unit::TestCase
     end
   end
 
-#  def test_keys
-#    assert_equal @k, @h.keys
-#  end
+  def test_keys
+    assert_equal @k, @h.keys
+  end
 
   def test_each
     assert_equal 1, 2
