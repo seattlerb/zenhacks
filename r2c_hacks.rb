@@ -3,7 +3,7 @@
 require 'parse_tree'
 require 'sexp_processor'
 require 'ruby_to_c'
-require 'ruby_to_ruby'
+require 'ruby2ruby'
 
 class Method
   def with_class_and_method_name

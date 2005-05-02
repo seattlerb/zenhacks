@@ -24,7 +24,7 @@ class Profiler
   def start_profile
     @@start = time_now
     @@stack = [[0, 0, :toplevel], [0, 0, :dummy]]
-    @@map = {"#toplevel" => [1, 0.0, 0.0, "#toplevel"]}
+    @@map = {"#toplevel" => [1, 0.0, 0.0, [nil, "#toplevel"]]}
     add_event_hook
   end
 
@@ -40,12 +40,24 @@ class Profiler
     data = @@map.values
     data.sort!{|a,b| b[2] <=> a[2]} # TODO: change to sort_by
     sum = 0
+
     f.printf "  %%   cumulative   self              self     total\n"           
     f.printf " time   seconds   seconds    calls  ms/call  ms/call  name\n"
     for d in data
       sum += d[2]
+      klass = d[3].first
+      meth  = d[3].last.to_s
+
+      signature = if klass.nil?
+                    meth
+                  elsif klass.kind_of?(Class)
+                    klass.to_s.sub(/#<\S+:(\S+)>/, '\\1') + "#" + meth
+                  else
+                    klass.class.name + "." + meth
+                  end
+
       f.printf "%6.2f %8.2f  %8.2f %8d ", d[2]/total*100, sum, d[2], d[0]
-      f.printf "%8.2f %8.2f  %s\n", d[2]*1000/d[0], d[1]*1000/d[0], d[3]
+      f.printf "%8.2f %8.2f  %s\n", d[2]*1000/d[0], d[1]*1000/d[0], signature
     end
   end
 
@@ -78,6 +90,12 @@ static VALUE map = Qnil;
     prof_event_hook(rb_event_t event, NODE *node,
                     VALUE self, ID mid, VALUE klass) {
 
+      static int profiling = 0;
+
+      if (mid == ID_ALLOCATOR) return;
+      if (profiling) return;
+      profiling++;
+
       if (NIL_P(profiler_klass))
         profiler_klass = rb_path2class("Profiler");
       if (NIL_P(stack))
@@ -90,29 +108,14 @@ static VALUE map = Qnil;
       case RUBY_EVENT_C_CALL:
         {
           VALUE signature;
-          VALUE mod_name = rb_mod_name(klass);
-    
-          if (NIL_P(mod_name))
-            signature = rb_str_new2("Unknown");
-          else
-            signature = mod_name;
-    
-          rb_str_cat(signature, ".", 1); // TODO: # or .
-
-          char * meth = rb_id2name(mid);
-          if (meth) {
-            size_t len = strlen(meth);
-            rb_str_cat(signature, meth, len);
-          } else {
-            rb_str_cat(signature, "unknown", 7);
-          }
-
-          VALUE time  = rb_ary_new();
+          signature = rb_ary_new2(2);
+          rb_ary_store(signature, 0, klass);
+          rb_ary_store(signature, 1, ID2SYM(mid));
+          VALUE time = rb_ary_new();
           rb_ary_push(time, time_now());
           rb_ary_push(time, rb_float_new(0.0));
           rb_ary_push(time, signature);
           rb_ary_push(stack, time);
-
         }
         break;
       case RUBY_EVENT_RETURN:
@@ -151,6 +154,7 @@ static VALUE map = Qnil;
         }
         break;
       }
+      profiling--;
     }
     EOF
 

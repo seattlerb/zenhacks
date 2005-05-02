@@ -90,8 +90,9 @@ static unsigned long threshold = 0;"
       case RUBY_EVENT_CALL:
         {
           VALUE signature;
-          VALUE mod_name = rb_mod_name(klass);
     
+    #if 0
+          VALUE mod_name = rb_mod_name(klass);
           if (NIL_P(mod_name))
             signature = rb_str_new2("Unknown");
           else
@@ -106,6 +107,11 @@ static unsigned long threshold = 0;"
           } else {
             rb_str_cat(signature, "unknown", 7);
           }
+    #else
+          signature = rb_ary_new2(2);
+          rb_ary_store(signature, 0, klass);
+          rb_ary_store(signature, 1, ID2SYM(mid));
+    #endif
 
           unsigned long count = NUM2ULONG(rb_hash_aref(data, signature)) + 1;
 

@@ -1,6 +1,5 @@
 #!/usr/local/bin/ruby -w
 
-require 'ruby_to_ruby'
 require 'r2c_hacks'
 
 class Example

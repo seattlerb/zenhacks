@@ -1,5 +1,5 @@
 require 'parse_tree'
-require 'ruby_to_ruby'
+require 'ruby2ruby'
 
 class Refax
 
