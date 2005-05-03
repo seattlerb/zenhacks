@@ -13,17 +13,17 @@ echo N=$N
 if [ $SKIP = no ]; then
     echo
     echo ruby vanilla:
-    time ruby factorial.rb $N
+    time ruby misc/factorial.rb $N
 
     echo
     echo ruby profiler:
-    time ruby -rprofile factorial.rb $N
+    time ruby -rprofile misc/factorial.rb $N
 fi
 
 echo
 echo zenspider profiler:
 export GEM_SKIP=RubyInline
-time ruby -I.:../../RubyInline/dev -rzenprofile factorial.rb $N
+time ruby -I.:lib:../../RubyInline/dev -rzenprofile misc/factorial.rb $N
 
 # shugo's version
-# time ruby -I.:lib -runprof factorial.rb $N 2>&1 | head
+# time ruby -I.:lib -runprof misc/factorial.rb $N 2>&1 | head
