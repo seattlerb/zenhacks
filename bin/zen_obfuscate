@@ -1,0 +1,26 @@
+#!/usr/local/bin/ruby -w
+
+require 'rbconfig'
+
+rb_file = ARGV.shift
+
+base_name = File.basename rb_file, ".rb"
+c_file = "#{base_name}.c"
+so_file = "#{base_name}.#{Config::CONFIG["DLEXT"]}"
+
+system "./translate2.rb #{rb_file} > #{c_file}"
+
+srcdir  = Config::CONFIG["srcdir"]
+archdir = Config::CONFIG["archdir"]
+hdrdir = nil
+if File.exist? archdir + "/ruby.h" then
+  hdrdir = archdir
+elsif File.exist? srcdir + "/ruby.h" then
+  hdrdir = srcdir
+else
+  STDERR.puts "ERROR: Can't find header files for ruby. Exiting..."
+  exit 1
+end
+
+exit 1 unless system "#{Config::CONFIG['LDSHARED']} #{Config::CONFIG['CFLAGS']} -I #{hdrdir} -o #{so_file} #{c_file}"
+

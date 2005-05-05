@@ -1,0 +1,30 @@
+#!/usr/local/bin/ruby -w
+
+require 'pp'
+
+# KLASSES[klass] = c_name
+KLASSES = {}
+
+# METHODS[klass][ruby_name] = c_name
+METHODS = Hash.new { |h,k| h[k] = {} }
+
+Dir.chdir ARGV.shift do
+  Dir['*.c'].each do |c_file|
+    File.open c_file do |fp|
+      fp.each_line do |line|
+        case line
+        when /([^ ]+)\s+=\srb_define_class\("([^"]+)"/ then
+          KLASSES[$1] = $2
+        when /rb_define_method\(([^,]+),\s+"([^"]+)",\s+([^,]+)/ then
+          klass = KLASSES[$1]
+          METHODS[klass][$2] = $3
+        end
+      end
+    end
+  end
+end
+
+File.open "RubyC_map.rb", "w" do |fp|
+  PP.pp METHODS, fp
+end
+
