@@ -1,5 +1,8 @@
 #!/usr/local/bin/ruby -w
 
+ENV['GEM_SKIP'] = 'ParseTree:RubyInline'
+$:.push 'lib', '../../ParseTree/dev/lib', '../../RubyInline/dev', '../../ruby_to_c/dev'
+
 require 'r2c_hacks'
 
 class Example

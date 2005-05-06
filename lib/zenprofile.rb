@@ -3,38 +3,26 @@ require 'singleton'
 
 require 'pp'
 
-class Profiler
+class ZenProfiler
 
   include Singleton
 
   @@start = @@stack = @@map = nil
 
   def self.start_profile
-    self.instance.start_profile
+    @@start = self.instance.time_now
+    @@stack = [[0, 0, [nil, :toplevel]], [0, 0, [nil, :dummy]]]
+    @@map = {"#toplevel" => [1, 0.0, 0.0, [nil, "#toplevel"]]}
+    self.instance.add_event_hook
   end
 
   def self.stop_profile
-    self.instance.stop_profile
+    self.instance.remove_event_hook
   end
 
   def self.print_profile(f)
-    self.instance.print_profile(f)
-  end
-
-  def start_profile
-    @@start = time_now
-    @@stack = [[0, 0, :toplevel], [0, 0, :dummy]]
-    @@map = {"#toplevel" => [1, 0.0, 0.0, [nil, "#toplevel"]]}
-    add_event_hook
-  end
-
-  def stop_profile
-    remove_event_hook
-  end
-
-  def print_profile(f)
     stop_profile
-    total = time_now - @@start
+    total = self.instance.time_now - @@start
     if total == 0 then total = 0.01 end
     @@map["#toplevel"][1] = total
     data = @@map.values
@@ -97,7 +85,7 @@ static VALUE map = Qnil;
       profiling++;
 
       if (NIL_P(profiler_klass))
-        profiler_klass = rb_path2class("Profiler");
+        profiler_klass = rb_path2class("ZenProfiler");
       if (NIL_P(stack))
         stack = rb_cv_get(profiler_klass, "@@stack");
       if (NIL_P(map))
@@ -177,6 +165,6 @@ static VALUE map = Qnil;
 end
 
 END {
-  Profiler::print_profile(STDOUT)
+  ZenProfiler::print_profile(STDOUT)
 }
-Profiler::start_profile
+ZenProfiler::start_profile

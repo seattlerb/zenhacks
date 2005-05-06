@@ -5,8 +5,8 @@ N=$1
 if [ -z $N ]; then N=500000; fi
 if [ -z $2 ]; then SKIP=no; else SKIP=yes; fi
 
-rm -rf ~/.ruby_inline
-sync; sync; sync
+# rm -rf ~/.ruby_inline
+# sync; sync; sync
 export GEM_SKIP=ParseTree:RubyInline
 
 echo running $N iterations of factorial demo:

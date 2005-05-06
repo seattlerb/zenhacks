@@ -40,11 +40,9 @@ class ZenOptimizer
   end
 
   def self.optimize(signature)
-    STDERR.puts "*** Optimizer threshold tripped!! Optimizing #{signature}"
-    klass, meth = signature.split(/\./)
+    klass, meth = *signature
 
-    klass = eval(klass)
-    meth = meth.intern
+    STDERR.puts "*** Optimizer threshold tripped!! Optimizing #{klass}.#{meth}"
 
     begin
       klass.module_eval "inline(:Ruby) { |b| b.optimize(#{meth.inspect}) }"

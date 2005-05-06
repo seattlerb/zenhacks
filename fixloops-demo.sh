@@ -1,3 +1,3 @@
 #!/bin/bash
 
-GEM_SKIP=ParseTree ruby -I../../ParseTree/dev/lib:../../ruby_to_c/dev:. -w fixloops-bad.rb
+GEM_SKIP=ParseTree ruby -Ilib:../../ParseTree/dev/lib:../../ruby_to_c/dev:. -w misc/fixloops-bad.rb
