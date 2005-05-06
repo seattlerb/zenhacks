@@ -24,7 +24,6 @@ Dir.chdir ARGV.shift do
   end
 end
 
-File.open "RubyC_map.rb", "w" do |fp|
-  PP.pp METHODS, fp
-end
+print "RUBY_C_METHOD_MAP = "
+pp METHODS
 
