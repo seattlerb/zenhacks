@@ -15,46 +15,47 @@ contributions, suggestions, and bug fixes. I just can't put this
 project at the top of my priority list the way I can/do the others, so
 it may take me longer to get to than normal.
 
-** FEATURES/PROBLEMS:
-  
+** INCLUDES
+
 + RubyInline Hacks
-	+ zenprofile.rb
+	+ zenprofile-demo.sh - demonstrates the use of zenprofile.
+	+ lib/zenprofile.rb - a code profiler that is fairly readable yet fast.
 + ParseTree Hacks
-	+ parse_tree_graph
-	+ parse_tree_graph.rb
-	+ test_parse_tree_graph.rb
-	+ discover.rb
+	+ bin/parse_tree_graph - graphs parsetree for code fed to it.
+	+ test/test_parse_tree_graph.rb - tests for parse_tree_graph.
 + RubyToRuby Hacks
-	+ ruby2ruby.rb
-	+ fixloops.rb
-	+ hasty-fix.sh
-	+ hasty.rb
+	+ fixloops-demo.sh - demonstrates using parsetree to analyze source.
+	+ lib/fixloops.rb - simple loop analyzer and refactoring tool.
+	+ misc/fixloops-bad.rb - demo code for fixloops-demo.sh.
+	+ lib/ruby2ruby.rb - converts ParseTree's sexp back into ruby.
 + RubyToC Hacks
-	+ zenoptimize.rb
-	+ cheat.rb - basically the same thing as r2c_hacks.rb... FIX
-	+ r2c_hacks.rb
-	+ reconstruct.rb - demonstrates r2c_hacks
+	+ r2c_hacks-demo.rb - demonstrates r2c_hacks' methods.
+	+ lib/r2c_hacks.rb - implements to_sexp, to_ruby, and to_c for methods.
+	+ zenoptimize-demo.sh - demonstrates dynamic optimization of ruby.
+	+ lib/zenoptimize.rb - implements a dynamic optimizer using ruby2c.
 + Testing Hacks
-	+ stat.rb - shows
+	+ bin/test_stats - shows ratio of assertions to methods
 + Misc Hacks
-	+ graph.rb
-	+ macgraph.sh
-	+ muffdaddy.rb - allows you to very easily wrap objects and classes.
+	+ misc/factorial.rb - not a hack, but a demo file for above toys.
+	+ misc/find_c_methods - sniffs through ruby's C to find C methods.
+	+ lib/class-path.rb - returns array of each level of a class' namespace.
+	+ lib/discover.rb - requires files and returns classes introduced.
+	+ lib/muffdaddy.rb - allows you to very easily wrap objects and classes.
+	+ lib/graph.rb - very simple / clean api for building w/ graphviz.
+	+ bin/macgraph - very stupid / ugly frontend for using graphviz on osx.
+	+ lib/OrderedHash.rb - a simple Hash with ordered keys.
+	+ test/TestOrderedHash.rb - (bad) tests for OrderedHash.
 	+ OrderedHash.rb/TestOrderedHash.rb - Orderered keyed collection.
-	+ class-path.rb
-	+ timezones.rb - fixes the fact that you can't get timezones from Time.
-
-** SYNOPSYS:
-
-  DOC
+	+ lib/timezones.rb - fixes the fact that you can't get timezones from Time.
 
 ** REQUIREMENTS:
 
-+ DOC
+Lots... RubyInline, Ruby2C, ParseTree. Probably others. Not all
+dependencies are required for all hacks.
 
 ** INSTALL:
 
-+ DOC
++ No install, this is mostly for playing and/or reading.
 
 ** LICENSE:
 

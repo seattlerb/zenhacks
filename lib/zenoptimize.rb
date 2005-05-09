@@ -24,6 +24,9 @@ class ZenOptimizer
   include Singleton
 
   @@threshold = 500
+  @@sacred = {
+    Sexp => true,
+  }
   @@skip = Hash.new(false)
   @@data = Hash.new(0)
 
@@ -42,13 +45,15 @@ class ZenOptimizer
   def self.optimize(signature)
     klass, meth = *signature
 
-    STDERR.puts "*** Optimizer threshold tripped!! Optimizing #{klass}.#{meth}"
-
-    begin
-      klass.module_eval "inline(:Ruby) { |b| b.optimize(#{meth.inspect}) }"
-    rescue Exception => e
-      STDERR.puts "Failed to optimize #{klass}.#{meth}"
-      STDERR.puts "Exception = #{e.class}, message = #{e.message}"
+    unless @@sacred.include? klass then
+      STDERR.puts "*** Optimizer threshold tripped!! Optimizing #{klass}.#{meth}"
+      
+      begin
+        klass.module_eval "inline(:Ruby) { |b| b.optimize(#{meth.inspect}) }"
+      rescue Exception => e
+        STDERR.puts "Failed to optimize #{klass}.#{meth}"
+        STDERR.puts "Exception = #{e.class}, message = #{e.message}"
+      end
     end
 
     @@skip[signature] = true
