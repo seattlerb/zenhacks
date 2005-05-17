@@ -2,6 +2,26 @@
 
 require 'pp'
 
+class PP
+  module PPMethods
+    alias old_pp_hash pp_hash
+    def pp_hash(obj)
+      group(1, '{', '}') {
+        seplist(obj, nil, :each_pair) {|k, v|
+          group {
+            pp k
+            text ' => '
+            group(1) {
+              breakable ''
+              pp v
+            }
+          }
+        }
+      }
+    end
+  end
+end
+
 # KLASSES[klass] = c_name
 KLASSES = {}
 
@@ -15,9 +35,9 @@ Dir.chdir ARGV.shift do
         case line
         when /([^ ]+)\s+=\srb_define_class\("([^"]+)"/ then
           KLASSES[$1] = $2
-        when /rb_define_method\(([^,]+),\s+"([^"]+)",\s+([^,]+)/ then
+        when /rb_define_method\(([^,]+),\s+"([^"]+)",\s+([^,]+), (-?\d+)/ then
           klass = KLASSES[$1]
-          METHODS[klass][$2] = $3
+          METHODS[klass][$2.intern] = $3, $4.to_i
         end
       end
     end
