@@ -1,6 +1,6 @@
 ZenHacks
-    http://www.zenspider.com/ZSS/Products/ZenHacks
-    support@zenspider.com
+    http://rubyforge.org/projects/zenhacks/
+    ryand-ruby@zenspider.com
 
 ** DESCRIPTION:
   
@@ -51,7 +51,8 @@ it may take me longer to get to than normal.
 ** REQUIREMENTS:
 
 Lots... RubyInline, Ruby2C, ParseTree. Probably others. Not all
-dependencies are required for all hacks.
+dependencies are required for all hacks. There may be some tweaking
+needed to run the demo.sh files.
 
 ** INSTALL:
 

@@ -10,7 +10,6 @@ if $SAFE > 0
 end
 
 require 'tracer'
-require 'pp'
 
 class Tracer
   def Tracer.trace_func(*vars)
@@ -513,9 +512,6 @@ class ZenDebugger
               prompt = false
             end
 
-          when /^\s*pp\s+/
-            PP.pp(debug_eval($', binding), stdout)
-
           when /^\s*p\s+/
             stdout.printf "%s\n", debug_eval($', binding).inspect
 
@@ -589,13 +585,6 @@ Commands
 
     def display_expression(exp, binding)
       stdout.printf "%s = %s\n", exp, debug_silent_eval(exp, binding).to_s
-    end
-
-    def frame_set_pos(file, line)
-      if @frames[0]
-        @frames[0][1] = file
-        @frames[0][2] = line
-      end
     end
 
     def display_frames(pos)
@@ -700,13 +689,12 @@ Commands
 
     def trace_func_line(file, line, id, binding, klass)
       frame_set_pos(file, line)
-      if !@no_step or @frames.size == @no_step
+      frame_size = @frames.size
+      if !@no_step or frame_size == @no_step
         @stop_next -= 1
         @stop_next = -1 if @stop_next < 0
-      elsif @frames.size < @no_step
+      elsif frame_size < @no_step
         @stop_next = 0		# break here before leaving...
-      else
-        # nothing to do. skipped.
       end
       if @stop_next == 0 or check_break_points(file, nil, line, binding, id)
         @no_step = nil
@@ -746,6 +734,20 @@ Commands
     def trace_func_raise(file, line, id, binding, klass)
       excn_handle(file, line, id, binding)
     end
+
+    inline(:C) do |builder|
+      builder.add_type_converter('VALUE', '', '')
+
+      builder.c <<-'EOF'
+      void frame_set_pos(VALUE file, VALUE line) {
+        VALUE f = rb_ary_entry(rb_iv_get(self, "@frames"), 0);
+        if (RTEST(f)) {
+          rb_ary_store(f, 1, file);
+          rb_ary_store(f, 2, line);
+        }
+      }
+      EOF
+    end # inline
   end # class Context
 
   trap("INT") { ZenDebugger.interrupt }
@@ -943,12 +945,12 @@ Commands
       builder.include '"ruby.h"'
       builder.include '"node.h"'
 
-      builder.add_type_converter('VALUE', '', '')
+      builder.add_type_converter('NODE *', '', '')
 
       builder.c_raw <<-'EOF'
         static void
         debugger_event_hook(rb_event_t event, NODE *node,
-                          VALUE xself, ID mid, VALUE klass) {
+                            VALUE xself, ID mid, VALUE klass) {
 
         static int debugging = 0;
         static VALUE debugger_klass = Qnil;
