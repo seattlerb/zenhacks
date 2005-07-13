@@ -4,6 +4,11 @@ ZenHacks
 
 ** DESCRIPTION:
   
+A cornucopia of hackery. Toys, Tricks and Tools that have spawned out
+of my other projects (RubyInline, ParseTree, Ruby2C, etc) but don't
+exactly fit there. This includes ZenDebugger, ZenProfiler,
+ZenOptimizer, ruby2ruby, and more.
+
 ZenHacks is a semi-random collection of libs and scripts that just
 don't belong in a package of their own. Many, if not most, have
 dependencies on other packages and use, abuse, or extend them in
