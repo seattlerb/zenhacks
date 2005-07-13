@@ -6,9 +6,9 @@ class RubyToRuby < SexpProcessor
 
   def self.translate(klass, method=nil)
     unless method.nil? then
-      self.new.process(ParseTree.new.parse_tree_for_method(klass, method))
+      self.new.process(ParseTree.new(false).parse_tree_for_method(klass, method))
     else
-      self.new.process(ParseTree.new.parse_tree(klass).first) # huh? why is the :class node wrapped?
+      self.new.process(ParseTree.new(false).parse_tree(klass).first) # huh? why is the :class node wrapped?
     end
   end
 
@@ -115,14 +115,62 @@ class RubyToRuby < SexpProcessor
   def process_dasgn_curr(exp)
     exp.shift.to_s
   end
+
+  def rewrite_defn(exp)
+    exp.shift # :defn
+    name = exp.shift
+    args = s(:args)
+    body = Sexp.from_array exp.shift
+
+    case body.first
+    when :scope, :fbody then
+      body = body[1] if body.first == :fbody
+      args = body.last[1]
+      assert_type args, :args
+      assert_type body, :scope
+      assert_type body[1], :block
+      body.last.delete_at 1
+    when :bmethod then
+      # BEFORE: [:defn, :bmethod_added, [:bmethod, [:dasgn_curr, :x], ...]]
+      # AFTER:  [:defn, :bmethod_added, [:args, :x], [:scope, [:block, ...]]]
+      body.shift # :bmethod
+      # [:dasgn_curr, :x],
+      # [:call, [:dvar, :x], :+, [:arglist, [:lit, 1]]]]]
+      dasgn = body.shift
+      assert_type dasgn, :dasgn_curr
+      dasgn.shift # type
+      args.push(*dasgn)
+      body.find_and_replace_all(:dvar, :lvar)
+      if body.first.first == :block then
+        body = s(:scope, body.shift)
+      else
+        body = s(:scope, s(:block, body.shift)) # single statement
+      end
+    when :dmethod
+      # BEFORE: [:defn, :dmethod_added, [:dmethod, :bmethod_maker, ...]]
+      # AFTER:  [:defn, :dmethod_added, ...]
+      body = body[2][1][2] # UGH! FIX
+      args = body[1]
+      body.delete_at 1
+      body = s(:scope, body)
+    when :ivar then
+      body = s(:scope, s(:block, s(:return, body)))
+    when :attrset then
+      argname = body.last
+      args << :arg
+      body = s(:scope, s(:block, s(:return, s(:iasgn, argname, s(:lvar, :arg)))))
+    else
+      raise "Unknown :defn format: #{name.inspect} #{args.inspect} #{body.inspect}"
+    end
+
+    return s(:defn, name, args, body)
+  end
   
   def process_defn(exp)
     name = exp.shift
     args = process(exp.shift).to_a
-    args[1..-1] = indent(args[1..-1])
-    args.join
     body = indent(process(exp.shift))
-    return "def #{name}#{args}#{body}end".gsub(/\n\s*\n+/, "\n")
+    return "def #{name}#{args}\n#{body}end".gsub(/\n\s*\n+/, "\n")
   end
   
   def process_dot2(exp)

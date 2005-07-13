@@ -9,6 +9,7 @@ class Method
     if self.inspect =~ /<Method: (.*)\#(.*)>/ then
       klass = eval $1
       method  = $2.intern
+      raise "Couldn't determine class from #{self.inspect}" if klass.nil?
       return yield(klass, method)
     else
       raise "Can't parse signature: #{self.inspect}"
@@ -17,7 +18,7 @@ class Method
 
   def to_sexp
     with_class_and_method_name do |klass, method|
-      ParseTree.new.parse_tree_for_method(klass, method)
+      ParseTree.new(false).parse_tree_for_method(klass, method)
     end
   end
 
@@ -31,5 +32,15 @@ class Method
     with_class_and_method_name do |klass, method|
       RubyToRuby.translate(klass, method)
     end
+  end
+end
+
+class Proc
+  ProcStoreTmp = Class.new unless defined? ProcStoreTmp
+  def to_ruby
+    ProcStoreTmp.send(:define_method, :myproc, self)
+    m = ProcStoreTmp.new.method(:myproc)
+    result = m.to_ruby.sub!(/def myproc\(([^\)]+)\)/, 'proc do |\1|')
+    return result
   end
 end
