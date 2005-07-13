@@ -5,16 +5,18 @@ require 'rubygems'
 spec = Gem::Specification.new do |s|
 
   s.name = 'ZenHacks'
-  s.version = '1.0.0'
+  s.version = '1.0.1'
   s.summary = "Tools and toys of mine that don't have a better home."
 
   paragraphs = File.read("README.txt").split(/\n\n+/)
   s.description = paragraphs[3]
   puts s.description
 
-  all_files = IO.readlines("Manifest.txt").map {|f| f.chomp }
+  s.add_dependency('RubyInline')
+  s.add_dependency('ParseTree')
+  s.add_dependency('RubyToC')
 
-  s.requirements << "Many. Depends on what you want to play with."
+  all_files = IO.readlines("Manifest.txt").map {|f| f.chomp }
   s.files = all_files
 
   s.bindir = "bin"
@@ -22,10 +24,8 @@ spec = Gem::Specification.new do |s|
   puts "Executables = #{s.executables.join(", ")}"
 
   s.require_path = 'lib' 
-#  s.autorequire = nil
 
   s.has_rdoc = false                            # I SUCK - TODO
-#  s.test_suite_file = nil
 
   s.author = "Ryan Davis"
   s.email = "ryand-ruby@zenspider.com"

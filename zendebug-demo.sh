@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION='1.0.0' # this is mainly to appease my relese script's requirements.
+VERSION='1.0.1' # this is mainly to appease my relese script's requirements.
 
 export GEM_SKIP=RubyInline
 
