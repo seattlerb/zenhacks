@@ -1,7 +1,19 @@
-require 'inline'
+begin require 'rubygems' rescue LoadError end
 require 'singleton'
-require 'ruby_to_c'
+require 'inline'
 require 'pp'
+require 'ruby_to_c'
+
+class Class
+  def optimize(*methods)
+    methods.each do |method|
+      src = RubyToC.translate(self, method)
+      class_eval "alias :#{method}_slow :#{method}"
+      class_eval "remove_method :#{method}"
+      class_eval "inline(:C) { |b| b.c src }"
+    end
+  end
+end
 
 module Inline
   class Ruby < Inline::C
@@ -23,12 +35,16 @@ class ZenOptimizer
 
   include Singleton
 
+  @@signature = :fuck
   @@threshold = 500
   @@sacred = {
     Sexp => true,
   }
   @@skip = Hash.new(false)
   @@data = Hash.new(0)
+
+  def self.data; @@data; end
+  def self.signature; @@signature; end
 
   def self.start_optimizing
     self.instance.add_event_hook
@@ -80,6 +96,8 @@ static unsigned long threshold = 0;"
     prof_event_hook(rb_event_t event, NODE *node,
                     VALUE self, ID mid, VALUE klass) {
 
+      static int optimizing = 0;
+
       if (NIL_P(optimizer_klass))
         optimizer_klass = rb_path2class("ZenOptimizer");
       if (NIL_P(data))
@@ -88,34 +106,19 @@ static unsigned long threshold = 0;"
         skip = rb_cv_get(optimizer_klass, "@@skip");
       if (threshold == 0)
         threshold = NUM2ULONG(rb_cv_get(optimizer_klass, "@@threshold"));
+      if (optimizing) return;
+      optimizing++;
 
       switch (event) {
       case RUBY_EVENT_CALL:
         {
           VALUE signature;
     
-    #if 0
-          VALUE mod_name = rb_mod_name(klass);
-          if (NIL_P(mod_name))
-            signature = rb_str_new2("Unknown");
-          else
-            signature = mod_name;
-    
-          rb_str_cat(signature, ".", 1); // TODO: # or .
-
-          char * meth = rb_id2name(mid);
-          if (meth) {
-            size_t len = strlen(meth);
-            rb_str_cat(signature, meth, len);
-          } else {
-            rb_str_cat(signature, "unknown", 7);
-          }
-    #else
           signature = rb_ary_new2(2);
           rb_ary_store(signature, 0, klass);
           rb_ary_store(signature, 1, ID2SYM(mid));
-    #endif
 
+          rb_cv_set(optimizer_klass, "@@signature", signature);
           unsigned long count = NUM2ULONG(rb_hash_aref(data, signature)) + 1;
 
           if (count > threshold) {
@@ -128,6 +131,7 @@ static unsigned long threshold = 0;"
         }
         break;
       }
+      optimizing--;
     }
     EOF
 

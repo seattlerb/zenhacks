@@ -17,14 +17,8 @@ end
 
 usage if defined? $h
 
-
-#begin
-#  require 'rubygems'
-#  require_gem 'ParseTree'
-#rescue LoadError
-  require 'parse_tree'
-#end
-
+begin require 'rubygems' rescue LoadError end
+require 'parse_tree'
 require 'sexp_processor'
 
 def discover_new_classes_from

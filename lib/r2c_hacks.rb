@@ -1,5 +1,4 @@
-#require 'rubygems'
-#require_gem 'ParseTree'
+begin require 'rubygems' rescue LoadError end
 require 'parse_tree'
 require 'sexp_processor'
 require 'ruby_to_c'
