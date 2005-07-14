@@ -5,6 +5,8 @@
 	+ Added Proc#to_ruby in r2c_hacks.
 	+ Added RubyToRuby#rewrite_defn to support bmethods (read: procs).
 	+ Added Class#optimize(*methods) to zenoptimize.
+	+ Added bin/nopaste for cmdline access to nopaste on rafb.net.
+	+ Added bin/quickbench to generate ruby benchmark templates quickly.
 + 4 bug fixes:
 	+ Fixed gems for non-gem systems.
 	+ Fixed minor output problem with RubyToRuby#process_defn.
