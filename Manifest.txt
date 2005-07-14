@@ -1,8 +1,11 @@
 History.txt
 Manifest.txt
 README.txt
+ZenHacks.gemspec
 bin/macgraph
+bin/nopaste
 bin/parse_tree_graph
+bin/quickbench
 bin/test_stats
 fixloops-demo.sh
 lib/OrderedHash.rb
