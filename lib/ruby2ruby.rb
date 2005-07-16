@@ -131,16 +131,17 @@ class RubyToRuby < SexpProcessor
       assert_type body[1], :block
       body.last.delete_at 1
     when :bmethod then
-      # BEFORE: [:defn, :bmethod_added, [:bmethod, [:dasgn_curr, :x], ...]]
-      # AFTER:  [:defn, :bmethod_added, [:args, :x], [:scope, [:block, ...]]]
       body.shift # :bmethod
-      # [:dasgn_curr, :x],
-      # [:call, [:dvar, :x], :+, [:arglist, [:lit, 1]]]]]
-      dasgn = body.shift
-      assert_type dasgn, :dasgn_curr
-      dasgn.shift # type
-      args.push(*dasgn)
-      body.find_and_replace_all(:dvar, :lvar)
+      if body.first.first == :dasgn_curr then
+        # WARN: there are some implications here of having an empty
+        # :args below namely, "proc { || " does not allow extra args
+        # passed in.
+        dasgn = body.shift
+        assert_type dasgn, :dasgn_curr
+        dasgn.shift # type
+        args.push(*dasgn)
+        body.find_and_replace_all(:dvar, :lvar)
+      end
       if body.first.first == :block then
         body = s(:scope, body.shift)
       else

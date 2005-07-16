@@ -40,7 +40,8 @@ class Proc
   def to_ruby
     ProcStoreTmp.send(:define_method, :myproc, self)
     m = ProcStoreTmp.new.method(:myproc)
-    result = m.to_ruby.sub!(/def myproc\(([^\)]+)\)/, 'proc do |\1|')
+    result = m.to_ruby.sub(/def myproc\(([^\)]*)\)/,
+                           'proc { |\1|').sub(/end\Z/, '}')
     return result
   end
 end
