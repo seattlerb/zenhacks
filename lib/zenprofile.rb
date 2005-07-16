@@ -58,6 +58,7 @@ class ZenProfiler
     builder.add_type_converter("ID", '', '')
     builder.add_type_converter("NODE *", '', '')
 
+    builder.include '<time.h>'
     builder.include '"ruby.h"'
     builder.include '"node.h"'
 
