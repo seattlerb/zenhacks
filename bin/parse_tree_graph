@@ -86,7 +86,7 @@ class SexpGrapher < SexpProcessor
   def convert_node(n)
     node = "n%04d" % @n
     @n += 1
-    @graph.attribs[node]<<"label = \"#{n.inspect.gsub('"', '\\"')}\""
+    @graph.attribs[node]<<"label = \"#{Regexp.escape(n.inspect).gsub('"', '\"')}\"" # ' appeases emacs
     node
   end
 
