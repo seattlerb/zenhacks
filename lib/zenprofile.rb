@@ -1,8 +1,6 @@
 require 'inline'
 require 'singleton'
 
-require 'pp'
-
 class ZenProfiler
 
   include Singleton
@@ -29,8 +27,6 @@ class ZenProfiler
     @@map["#toplevel"][1] = @@total
     data = @@map.values.sort_by { |vals| -vals[2] }
     sum = 0
-
-    p data
 
     f.puts "Total time = %f" % @@total
     f.puts "Total time = %f" % @@total2
