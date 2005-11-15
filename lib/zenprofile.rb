@@ -34,6 +34,8 @@ class ZenProfiler
     f.puts "          total     self              self    total"
     f.puts "% time  seconds  seconds    calls  ms/call  ms/call  name"
 
+    @@total = data.inject(0) { |acc, (_, _, self_ms, _)| acc + self_ms }
+
     data.each do |calls, total_ms, self_ms, name|
       sum += self_ms
       klass = name.first
