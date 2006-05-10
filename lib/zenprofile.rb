@@ -71,7 +71,6 @@ class ZenProfiler
     builder.add_type_converter("NODE *", '', '')
 
     builder.include '<time.h>'
-    builder.include '"ruby.h"'
     builder.include '"node.h"'
 
     builder.prefix "
@@ -92,10 +91,13 @@ static VALUE map = Qnil;
                     VALUE self, ID mid, VALUE klass) {
 
       static int profiling = 0;
+      VALUE now;
 
       if (mid == ID_ALLOCATOR) return;
       if (profiling) return;
       profiling++;
+
+      now = time_now();
 
       if (NIL_P(profiler_klass))
         profiler_klass = rb_path2class("ZenProfiler");
@@ -108,12 +110,21 @@ static VALUE map = Qnil;
       case RUBY_EVENT_CALL:
       case RUBY_EVENT_C_CALL:
         {
-          VALUE signature;
+          VALUE signature, time;
           signature = rb_ary_new2(2);
+
+          if (klass) {
+            if (TYPE(klass) == T_ICLASS) {
+              klass = RBASIC(klass)->klass;
+            } else if (FL_TEST(klass, FL_SINGLETON)) {
+              klass = self;
+            }
+          }
+
           rb_ary_store(signature, 0, klass);
           rb_ary_store(signature, 1, ID2SYM(mid));
-          VALUE time = rb_ary_new2(3);
-          rb_ary_store(time, 0, time_now());
+          time = rb_ary_new2(3);
+          rb_ary_store(time, 0, now);
           rb_ary_store(time, 1, rb_float_new(0.0));
           rb_ary_store(time, 2, signature);
           rb_ary_push(stack, time);
@@ -122,14 +133,16 @@ static VALUE map = Qnil;
       case RUBY_EVENT_RETURN:
       case RUBY_EVENT_C_RETURN:
         {
-        VALUE now = time_now();
-        VALUE tick = rb_ary_pop(stack);
-
-        if (!RTEST(tick)) break;
-
-        VALUE signature = rb_ary_entry(tick, -1);
-        
+        VALUE tick;
+        VALUE signature;
         VALUE data = Qnil;
+        VALUE toplevel;
+        double cost;
+
+        tick = rb_ary_pop(stack);
+        if (!RTEST(tick)) break;
+        signature = rb_ary_entry(tick, -1);
+
         st_lookup(RHASH(map)->tbl, signature, &data);
         if (NIL_P(data)) {
           data = rb_ary_new2(4);
@@ -142,7 +155,7 @@ static VALUE map = Qnil;
 
         rb_ary_store(data, 0, ULONG2NUM(NUM2ULONG(rb_ary_entry(data, 0)) + 1));
 
-        double cost = NUM2DBL(now) - NUM2DBL(rb_ary_entry(tick, 0));
+        cost = (NUM2DBL(now) - NUM2DBL(rb_ary_entry(tick, 0)));
 
         rb_ary_store(data, 1, rb_float_new(NUM2DBL(rb_ary_entry(data, 1))
                                            + cost));
@@ -151,11 +164,12 @@ static VALUE map = Qnil;
         rb_ary_store(data, 2, rb_float_new(NUM2DBL(rb_ary_entry(data, 2))
                                            + cost
                                            - NUM2DBL(rb_ary_entry(tick, 1))));
-
-        VALUE toplevel = rb_ary_entry(stack, -1);
-        VALUE tl_stats = rb_ary_entry(toplevel, 1);
-        long n = NUM2DBL(tl_stats) + cost;
-        rb_ary_store(toplevel, 1, rb_float_new(n));
+ 
+        toplevel = rb_ary_entry(stack, -1);
+        if (RTEST(toplevel)) {
+          VALUE tl_stats = rb_ary_entry(toplevel, 1);
+          rb_ary_store(toplevel, 1, rb_float_new(NUM2DBL(tl_stats) + cost));
+        }
         }
         break;
       }
