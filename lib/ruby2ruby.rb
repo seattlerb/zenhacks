@@ -19,6 +19,9 @@ class RubyToRuby < SexpProcessor
     self.auto_shift_type = true
     self.strict = true
     self.expected = String
+
+    # TODO: reduce this
+    self.unsupported.push(:alias, :alloca, :argscat, :argspush, :attrset, :back_ref, :begin, :block_arg, :block_pass, :bmethod, :break, :cdecl, :cfunc, :colon2, :colon3, :cref, :cvar, :cvasgn, :cvdecl, :dasgn, :defined, :defs, :dmethod, :dregx, :dregx_once, :dsym, :dxstr, :ensure, :evstr, :fbody, :flip2, :flip3, :for, :gasgn, :gvar, :hash, :ifunc, :last, :match, :match2, :match3, :memo, :method, :module, :newline, :next, :not, :nth_ref, :op_asgn1, :op_asgn2, :op_asgn_and, :op_asgn_or, :opt_n, :or, :postexe, :redo, :resbody, :rescue, :retry, :sclass, :svalue, :to_ary, :undef, :valias, :xstr, :yield)
   end
   
   def indent(s)
@@ -277,6 +280,11 @@ class RubyToRuby < SexpProcessor
   def process_self(exp)
     "self"
   end
+
+  def process_splat(exp)
+    "*#{process(exp.shift)}"
+  end
+
   def process_str(exp)
     return exp.shift.dump
   end

@@ -1,15 +1,12 @@
+def discover_classes
+  klasses = []
+  ObjectSpace.each_object(Module) { |k| klasses << k }
+  klasses
+end
+
 def discover_new_classes_from
-  old_classes = []
-  ObjectSpace.each_object(Module) do |klass|
-    old_classes << klass
-  end
-
+  old_classes = discover_classes
   yield
-
-  new_classes = []
-  ObjectSpace.each_object(Module) do |klass|
-    new_classes << klass
-  end
-
+  new_classes = discover_classes
   new_classes - old_classes
 end

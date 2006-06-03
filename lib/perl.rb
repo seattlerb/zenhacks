@@ -3,6 +3,10 @@ require 'inline'
 
 class Perl
 
+  def self.runtime
+    perl = Perl.new("-e", "0", *ARGV)
+  end
+
   inline(:C) do |builder|
 
     builder.add_compile_flags `perl -MExtUtils::Embed -e ccopts`.chomp
@@ -438,11 +442,6 @@ Init_perl()
 
   rb_define_singleton_method(cPerl, "new", perl__new, -1);
   rb_define_method(cPerl, "initialize", perl__initialize, -1);
-  /*
-    rb_define_singleton_method(cPerl, "eval", perl__eval, 1);
-    rb_define_singleton_method(cPerl, "get_sv", perl__get_sv, 1);
-    rb_define_singleton_method(cPerl, "call", perl__call, -1);
-  */
   rb_define_alias(cPerl, "eval_", "eval");
   rb_define_alias(cPerl, "send_", "send");
   rb_define_method(cPerl, "eval", perl__eval, 1);
@@ -997,34 +996,9 @@ Init_perl()
   rb_define_method(cPerlObject, "method_missing", perl__missing, -1);
 }
 )
-end
 
+    builder.add_to_init('Init_perl();') # yes... we cheat
+end
 end
 
 class PerlError < Exception; end
-
-ARGV << 'blah' if ARGV.empty?
-
-Perl__ = Perl.new("-e", "0", *ARGV)
-
-class Object
-  def perl_eval(*args)
-    Perl__.eval(*args)
-  end
-
-  def perl_send(*args)
-    Perl__.send(*args)
-  end
-
-  def perl_new(*args)
-    clazz = args.pop
-    Perl__.send(clazz, "new", *args)
-  end
-
-  def perl_call(*args)
-    Perl__.call(*args)
-  end
-
-end
-
-perl_eval('print @ARGV, "\n";')

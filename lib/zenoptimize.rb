@@ -1,13 +1,13 @@
-begin require 'rubygems' rescue LoadError end
+begin require 'rubygems'; rescue LoadError; end
 require 'singleton'
 require 'inline'
 require 'pp'
-require 'ruby_to_c'
+require 'ruby_to_ansi_c'
 
 class Class
   def optimize(*methods)
     methods.each do |method|
-      src = RubyToC.translate(self, method)
+      src = RubyToAnsiC.translate(self, method)
       class_eval "alias :#{method}_slow :#{method}"
       class_eval "remove_method :#{method}"
       class_eval "inline(:C) { |b| b.c src }"
@@ -18,7 +18,7 @@ end
 module Inline
   class Ruby < Inline::C
     def optimize(meth)
-      src = RubyToC.translate(@mod, meth)
+      src = RubyToAnsiC.translate(@mod, meth)
       if $DEBUG then
         STDERR.puts
         STDERR.puts src

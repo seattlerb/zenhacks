@@ -1,7 +1,7 @@
 begin require 'rubygems' rescue LoadError end
 require 'parse_tree'
 require 'sexp_processor'
-require 'ruby_to_c'
+require 'ruby_to_ansi_c'
 require 'ruby2ruby'
 
 class Method
@@ -24,7 +24,7 @@ class Method
 
   def to_c
     with_class_and_method_name do |klass, method|
-      RubyToC.translate(klass, method)
+      RubyToAnsiC.translate(klass, method)
     end
   end
 
@@ -35,12 +35,31 @@ class Method
   end
 end
 
-class Proc
-  ProcStoreTmp = Class.new unless defined? ProcStoreTmp
+class ProcStoreTmp
+  @@n = 0
+  def self.name
+    @@n += 1
+    return :"myproc#{@@n}"
+  end
+end
+
+class UnboundMethod
   def to_ruby
-    ProcStoreTmp.send(:define_method, :myproc, self)
-    m = ProcStoreTmp.new.method(:myproc)
-    result = m.to_ruby.sub(/def myproc\(([^\)]*)\)/,
+    name = ProcStoreTmp.name
+    ProcStoreTmp.send(:define_method, name, self)
+    m = ProcStoreTmp.new.method(name)
+    result = m.to_ruby.sub(/def #{name}\(([^\)]*)\)/,
+                           'proc { |\1|').sub(/end\Z/, '}')
+    return result
+  end
+end
+
+class Proc
+  def to_ruby
+    name = ProcStoreTmp.name
+    ProcStoreTmp.send(:define_method, name, self)
+    m = ProcStoreTmp.new.method(name)
+    result = m.to_ruby.sub(/def #{name}\(([^\)]*)\)/,
                            'proc { |\1|').sub(/end\Z/, '}')
     return result
   end

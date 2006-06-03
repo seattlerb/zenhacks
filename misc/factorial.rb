@@ -10,17 +10,19 @@ class Factorial
 
 end
 
-f = Factorial.new()
+if $0 == __FILE__ then
+  f = Factorial.new()
 
-max = ARGV.shift || 1000000
-max = max.to_i
+  max = ARGV.shift || 1000000
+  max = max.to_i
 
-tstart = Time.now
+  tstart = Time.now
 
-(1..max).each { |m| n = f.factorial(5); }
+  (1..max).each { |m| n = f.factorial(5); }
 
-tend = Time.now
+  tend = Time.now
 
-total = tend - tstart
-avg = total / max
-printf "Iter = #{max}, T = %.8f sec, %.8f sec / iter\n", total, avg
+  total = tend - tstart
+  avg = total / max
+#  printf "Iter = #{max}, T = %.8f sec, %.8f sec / iter\n", total, avg
+end
