@@ -1,3 +1,4 @@
+begin require 'rubygems'; rescue LoadError; end
 require 'inline'
 require 'singleton'
 
@@ -7,11 +8,22 @@ class ZenProfiler
 
   @@start = @@stack = @@map = nil
 
-  def self.start_profile
+  def self.go
+    at_exit {
+      ZenProfiler::print_profile(STDOUT)
+    }
+    ZenProfiler::start_profile
+  end
+
+  def self.restart
     @@start = self.instance.time_now
     @@start2 = Process.times[0]
     @@stack = [[0, 0, [nil, :toplevel]], [0, 0, [nil, :dummy]]]
     @@map = {"#toplevel" => [1, 0.0, 0.0, [nil, "#toplevel"]]}
+  end
+
+  def self.start_profile
+    self.restart unless @@start
     self.instance.add_event_hook
   end
 
@@ -44,12 +56,13 @@ class ZenProfiler
       signature =
         if klass.nil?
           meth
-        elsif klass.kind_of?(Class)
-          klass.to_s.sub(/#<\S+:(\S+)>/, '\\1') + "#" + meth
+        elsif klass.kind_of?(Module)
+          klassname = klass.name rescue klass.to_s.sub(/#<\S+:(\S+)>/, '\\1')
+          "#{klassname}##{meth}"
         else
-          klass.class.name + "." + meth
+          "#{klass.class}##{meth}"
         end
-      
+
       f.printf "%6.2f ",  (self_ms / @@total * 100.0)
       f.printf "%8.2f ", sum
       f.printf "%8.2f ",  self_ms
@@ -88,7 +101,7 @@ static VALUE map = Qnil;
     builder.c_raw <<-'EOF'
     static void
     prof_event_hook(rb_event_t event, NODE *node,
-                    VALUE self, ID mid, VALUE klass) {
+                    VALUE recv, ID mid, VALUE klass) {
 
       static int profiling = 0;
       VALUE now;
@@ -113,12 +126,10 @@ static VALUE map = Qnil;
           VALUE signature, time;
           signature = rb_ary_new2(2);
 
-          if (klass) {
-            if (TYPE(klass) == T_ICLASS) {
-              klass = RBASIC(klass)->klass;
-            } else if (FL_TEST(klass, FL_SINGLETON)) {
-              klass = self;
-            }
+          if (TYPE(klass) == T_ICLASS) {
+            klass = RBASIC(klass)->klass;
+          } else if (FL_TEST(klass, FL_SINGLETON)) {
+            klass = recv;
           }
 
           rb_ary_store(signature, 0, klass);
@@ -190,12 +201,6 @@ static VALUE map = Qnil;
         rb_remove_event_hook(prof_event_hook);
       }
     EOF
-
   end
-
 end
 
-END {
-  ZenProfiler::print_profile(STDOUT)
-}
-ZenProfiler::start_profile

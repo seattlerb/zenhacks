@@ -55,12 +55,19 @@ class UnboundMethod
 end
 
 class Proc
-  def to_ruby
+  def to_method
     name = ProcStoreTmp.name
     ProcStoreTmp.send(:define_method, name, self)
-    m = ProcStoreTmp.new.method(name)
-    result = m.to_ruby.sub(/def #{name}\(([^\)]*)\)/,
-                           'proc { |\1|').sub(/end\Z/, '}')
-    return result
+    ProcStoreTmp.new.method(name)
+  end
+
+  def to_sexp
+    body = self.to_method.to_sexp[2][1..-1]
+    [:proc, *body]
+  end
+
+  def to_ruby
+    self.to_method.to_ruby.sub(/def #{name}\(([^\)]*)\)/,
+                               'proc { |\1|').sub(/end\Z/, '}')
   end
 end
