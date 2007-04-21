@@ -1,13 +1,12 @@
-$: << "../../RubyInline/dev/"
-
 require 'inline'
 require 'singleton'
-
-$othercount = 0
 
 class EventHook
 
   include Singleton
+
+  ##
+  # Ruby events that EventHook notifies you about.
 
   EVENTS = {
     0x00 => :none,
@@ -29,6 +28,9 @@ class EventHook
   def self.stop_hook
     self.instance.remove_event_hook
   end
+
+  ##
+  # Redefine me in a subclass.  +args+ is [event_id, self, method, class].
 
   def self.process(*args)
     # do nothing
