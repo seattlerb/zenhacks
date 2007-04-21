@@ -11,11 +11,11 @@ fixloops-demo.sh
 lib/OrderedHash.rb
 lib/class-path.rb
 lib/discover.rb
+lib/eventhook.rb
 lib/fixloops.rb
 lib/graph.rb
 lib/muffdaddy.rb
 lib/r2c_hacks.rb
-lib/ruby2ruby.rb
 lib/timezones.rb
 lib/zendebug.rb
 lib/zenoptimize.rb

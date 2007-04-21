@@ -5,7 +5,7 @@ require 'rubygems'
 spec = Gem::Specification.new do |s|
 
   s.name = 'ZenHacks'
-  s.version = '1.0.1'
+  s.version = '1.0.2'
   s.summary = "Tools and toys of mine that don't have a better home."
 
   paragraphs = File.read("README.txt").split(/\n\n+/)
