@@ -8,11 +8,21 @@ class ZenProfiler
 
   @@start = @@stack = @@map = nil
 
+  @@percent_time_threshold = 0.5
+
   def self.go
     at_exit {
       ZenProfiler::print_profile(STDOUT)
     }
     ZenProfiler::start_profile
+  end
+
+  def self.percent_time_threshold
+    @@percent_time_threshold
+  end
+
+  def self.percent_time_threshold=(percent_time_threshold)
+    @@percent_time_threshold = percent_time_threshold
   end
 
   def self.restart
@@ -49,6 +59,10 @@ class ZenProfiler
     @@total = data.inject(0) { |acc, (_, _, self_ms, _)| acc + self_ms }
 
     data.each do |calls, total_ms, self_ms, name|
+      percent_time = self_ms / @@total * 100.0
+
+      next if percent_time < @@percent_time_threshold
+
       sum += self_ms
       klass = name.first
       meth  = name.last.to_s
@@ -63,7 +77,7 @@ class ZenProfiler
           "#{klass.class}##{meth}"
         end
 
-      f.printf "%6.2f ",  (self_ms / @@total * 100.0)
+      f.printf "%6.2f ",  percent_time
       f.printf "%8.2f ", sum
       f.printf "%8.2f ",  self_ms
       f.printf "%8d ",    calls
