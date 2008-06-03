@@ -19,4 +19,4 @@ if [ $SKIP = no ]; then
 fi
 
 echo "zenspider: (time ruby -rzenoptimize factorial.rb $N)"
-time ruby -I.:lib:../../ParseTree/dev/lib:../../RubyInline/dev:../../ruby_to_c/dev -rzenoptimize misc/factorial.rb $N
+time ruby -I.:lib:../../ParseTree/dev/lib:../../RubyInline/dev:../../ruby_to_c/dev/lib -rzenoptimize misc/factorial.rb $N
