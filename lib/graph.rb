@@ -17,7 +17,19 @@ class Graph < Hash
 
   def []=(key, val)
     @order << key unless self.has_key? key
-    super(key, val)
+    super
+  end
+
+  def delete key
+    @order.delete key
+    super
+  end
+
+  def filter_size minimum
+    counts.each do |node, count|
+      next unless count < minimum
+      delete node
+    end
   end
 
   def each_pair
@@ -45,7 +57,7 @@ class Graph < Hash
   end
   
   def keys_by_count
-    counts.sort_by { |x,y| y }.map {|x| x.first }
+    counts.sort_by { |key, count| -count }.map {|key, count| key }
   end
 
   def to_s
