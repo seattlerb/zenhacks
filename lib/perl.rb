@@ -13,29 +13,29 @@ class Perl
     builder.add_link_flags `perl -MExtUtils::Embed -e ldopts`.chomp
     # TODO:
     # shrplib = `perl -MConfig -e 'print $Config{"useshrplib"}'` == 'true'
-    
+
     builder.prefix %(
       #include "ruby.h"
       #include "rubyio.h"
       #include "st.h"
       #include "env.h"
       #include "version.h"
-      
+
       #include <stdio.h>
       #include <stdlib.h>
       #include <EXTERN.h>
       #include <perl.h>
-      
+
       #if defined(SHRPLIB) && defined(LIBPERL)
       #  include <dlfcn.h>
       #endif
-      
+
       /* for Perl 5.6 */
       #if PATCHLEVEL >= 6
       #  define PERL_POLLUTE 1
       #  include "embedvar.h"
       #endif
-      
+
       /* For the earlier versions of Perl */
       #ifndef ERRSV
       #  define ERRSV GvSV(errgv)
@@ -48,12 +48,12 @@ class Perl
       #    define PL_sv_undef sv_undef
       #  endif
       #endif
-      
+
       static VALUE cPerl;
       static VALUE cPerlObject;
       static VALUE ePerlError;
       static VALUE perl__instance = Qnil;
-      
+
       static VALUE perl__Sv2Object(SV* sv);
       static SV* perl__Object2Sv(VALUE val);
       extern void boot_DynaLoader _((CV* cv));
@@ -69,7 +69,7 @@ perl__xs_init()
 
   h = dlopen(LIBPERL, RTLD_GLOBAL | RTLD_LAZY);
 #endif
- 
+
   newXS("DynaLoader::boot_DynaLoader", boot_DynaLoader, __FILE__);
 
 #if defined(SHRPLIB) && defined(LIBPERL)
@@ -467,29 +467,29 @@ class PerlObject
     builder.add_link_flags `perl -MExtUtils::Embed -e ldopts`.chomp
     # TODO:
     # shrplib = `perl -MConfig -e 'print $Config{"useshrplib"}'` == 'true'
-    
+
     builder.prefix %(
       #include "ruby.h"
       #include "rubyio.h"
       #include "st.h"
       #include "env.h"
       #include "version.h"
-      
+
       #include <stdio.h>
       #include <stdlib.h>
       #include <EXTERN.h>
       #include <perl.h>
-      
+
       #if defined(SHRPLIB) && defined(LIBPERL)
       #  include <dlfcn.h>
       #endif
-      
+
       /* for Perl 5.6 */
       #if PATCHLEVEL >= 6
       #  define PERL_POLLUTE 1
       #  include "embedvar.h"
       #endif
-      
+
       /* For the earlier versions of Perl */
       #ifndef ERRSV
       #  define ERRSV GvSV(errgv)
@@ -502,12 +502,12 @@ class PerlObject
       #    define PL_sv_undef sv_undef
       #  endif
       #endif
-      
+
       static VALUE cPerl;
       static VALUE cPerlObject;
       static VALUE ePerlError;
       static VALUE perl__instance = Qnil;
-      
+
       static VALUE perl__Sv2Object(SV* sv);
       static SV* perl__Object2Sv(VALUE val);
       extern void boot_DynaLoader _((CV* cv));
@@ -824,7 +824,7 @@ perl__to_a(VALUE obj)
     }
     else if (SvTYPE(av) == SVt_PVHV) {
       HE* he;
-      
+
       for (hv_iterinit((HV*)av); he = hv_iternext((HV*)av);) {
 	char* key;
 	I32 klen;
