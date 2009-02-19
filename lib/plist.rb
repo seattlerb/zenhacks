@@ -1,4 +1,6 @@
 require 'rexml/parsers/pullparser'
+require 'time'
+require 'pp'
 
 def parse_plist(path)
   f = File.open(path)
@@ -20,16 +22,19 @@ def parse_plist(path)
       last = stack.pop
 
       case tag
-      when "key", "string"
-        stack.last.push(data.join.strip)
-      when "integer"
-        stack.last.push(data.join.strip.to_i)
-      when "dict"
-        stack.last.push(Hash[*last[1..-1]])
-      when "array"
-        a = last[1..-1]
-        stack.last.push(a)
-      when "plist"
+      when "key", "string" then
+        stack.last.push data.join.strip
+      when "date" then
+        stack.last.push Time.parse(data.join)
+      when "true" then
+        stack.last.push true
+      when "integer" then
+        stack.last.push data.join.strip.to_i
+      when "dict" then
+        stack.last.push Hash[*last[1..-1]]
+      when "array" then
+        stack.last.push last[1..-1]
+      when "plist" then
         return last.last
       else
         raise "unhandled type #{tag.inspect}"
