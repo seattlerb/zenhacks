@@ -18,7 +18,7 @@ end
 module Inline
   class Ruby < Inline::C
     def optimize(meth)
-      src = RubyToAnsiC.translate(@mod, meth)
+      src = RubyToAnsiC.translator.process(@mod, meth)
       if $DEBUG then
         STDERR.puts
         STDERR.puts src
