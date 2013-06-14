@@ -18,39 +18,10 @@ end
 usage if defined? $h
 
 begin require 'rubygems' rescue LoadError end
-require 'parse_tree'
+require 'ruby_parser'
 require 'sexp_processor'
 
-def discover_new_classes_from
-  old_classes = []
-  ObjectSpace.each_object(Module) do |klass|
-    old_classes << klass
-  end
-
-  yield
-
-  new_classes = []
-  ObjectSpace.each_object(Module) do |klass|
-    new_classes << klass
-  end
-
-  new_classes - old_classes
-end
-
 $f = false unless defined? $f
-
-new_classes = discover_new_classes_from do
-  ARGV.unshift "-" if ARGV.empty?
-  ARGV.each do |name|
-    if name == "-" then
-      code = $stdin.read
-      code = "class Example; def example; #{code}; end; end" if $f
-      eval code unless code.nil?
-    else
-      require name
-    end
-  end
-end unless $TESTING
 
 require 'graph'
 
@@ -63,7 +34,9 @@ class SexpGrapher < SexpProcessor
     self.warn_on_default = false
     @stack = []
     @graph = Graph.new
-    @graph.prefix << "   node [ shape = box, style = filled ];"
+    @graph.boxes
+    @graph.rotate
+    @graph.node_attribs << @graph.filled
     @abc = defined? $a
     @n = 1
   end
@@ -81,27 +54,29 @@ class SexpGrapher < SexpProcessor
   # at start of exp, push :lit onto stack
   # process :lit
   # process 1
-  # 
+  #
 
   def convert_node(n)
     node = "n%04d" % @n
     @n += 1
-    @graph.attribs[node]<<"label = \"#{Regexp.escape(n.inspect).gsub('"', '\"')}\"" # ' appeases emacs
+    @graph.node(node).label(n.inspect)
     node
   end
 
   def color_node(node_type, current)
     color = case node_type
-            when :attrasgn, :attrset, :dasgn_curr, :iasgn, :lasgn, :masgn then
+            when :attrasgn, :attrset, :dasgn_curr, :iasgn, :lasgn, :masgn, :args then
               "lightblue"
             when :and, :case, :else, :if, :iter, :or, :rescue, :until, :when, :while then
               "palegreen"
             when :call, :fcall, :super, :vcall, :yield then
-              "goldenrod"
+              "lightpink"
+            when :defn then
+              "yellow"
             else
               nil
             end
-    @graph.attribs[current] << "color = #{color.inspect}" unless color.nil?
+    @graph.color(color) << @graph.node(current) if color
   end
 
   def grapher(exp)
@@ -140,16 +115,14 @@ class SexpGrapher < SexpProcessor
 end
 
 if __FILE__ == $0 then
-  result = ParseTree.new.parse_tree(*new_classes)
-  if $f then
-    result = result[0][3][2][1] # extracts just the body of the example method
-    result.shift
-    result.shift
+  grapher = SexpGrapher.new
+
+  ARGV.each do |path|
+    result = RubyParser.new.parse File.read path
+    result = result.structure if defined? $s
+
+    grapher.process(result)
   end
 
-  result = Sexp.from_array(result)
-  grapher = SexpGrapher.new
-  result = result.structure if defined? $s
-  grapher.process(result)
   puts grapher.graphstr
 end
